@@ -1,3 +1,5 @@
+package api;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
@@ -6,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 class ApiServer {
@@ -14,12 +17,15 @@ class ApiServer {
         return res;
     }
 }
+
 class Request{
 
 }
+
 class Response{
 
 }
+
 class Log{
     static void show(String str ){
         System.out.println(str);
@@ -29,6 +35,7 @@ class Log{
 
     }
 }
+
 public class Client {
 
     private static String getParamsString(Map<String, String> params)
@@ -65,7 +72,7 @@ public class Client {
     public static Response callAPI(String strUrl, String method, Map<String,String> parameters, Map<String,String> headers){
         Response response = new Response();
         try {
-            URL url = new URL ( strUrl!=null?strUrl:"http://google.com");
+            URL url = new URL ( strUrl);
             String output = "";
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
@@ -91,9 +98,10 @@ public class Client {
                 out.writeBytes(output);
                 out.flush();
                 out.close();
-                conLength = output.length();
+                //conLength = output.length();
+            } else {
+                con.setRequestProperty("ContentLength","0");
             }
-            con.setRequestProperty("ContentLength",conLength+"");
 
             int status = con.getResponseCode();
 
@@ -108,9 +116,9 @@ public class Client {
 
             con.disconnect();
 
-            Log.show(strUrl + " " + output );
-            Log.show(method);
-            Log.show(content.toString());
+            //Log.show(strUrl + " " + output );
+            //Log.show(method);
+            //Log.show(content.toString());
 
             Log.log(""+status);
             Log.log(content.toString());
@@ -120,21 +128,34 @@ public class Client {
         return response;
     }
 
-    public static void main(String[] arg){
-        long steps=100;
+    public static void main(String[] arg) {
+        long steps = 100;
 
         Date dt0 = new Date();
-        System.out.println("Client starts..." + dt0);
+        Log.show("Client starts..." + dt0);
+        Log.show("steps: " + steps);
 
-        for(int i=0;i<steps;i++){
-            callAPI(null,"POST" +
-                    "",null,null);
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("firstName", "mrFirst");
+        map.put("lastName", "Last");
+
+        for (ApiEnum api : ApiEnum.values()){
+            Date dt00 = new Date();
+
+            for (int i = 0; i < steps; i++) {
+                callAPI(api.url, api.method, null, null);
+            }
+
+            Date dt01 = new Date();
+            long t = Math.abs(dt00.getTime() - dt01.getTime());
+
+            Log.show(api.title + " ==>  time: " + (int)((float)t/steps) + "ms");
         }
 
         Date dt99 = new Date();
         long t = Math.abs(dt0.getTime() - dt99.getTime());
-        System.out.println("Client ends... " + t);
+        Log.show("Client ends... " + t);
 
-        System.out.println("Medium step : " + ((float)t/steps));
+
     }
 }
