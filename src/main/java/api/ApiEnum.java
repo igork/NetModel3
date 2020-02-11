@@ -2,16 +2,21 @@ package api;
 
 
 public enum ApiEnum {
-    GOODLE_GET("Google_Get","http://google.com","GET"),
-    AWS_POST("Aws_Get","https://wqdy9aha38.execute-api.us-east-2.amazonaws.com/prod","GET");
+    GOODLE_GET("http://google.com","GET",false,null),
+    AWS_GET("https://wqdy9aha38.execute-api.us-east-2.amazonaws.com/prod","GET",true,"greetings"),
+    AWS_POST("https://wqdy9aha38.execute-api.us-east-2.amazonaws.com/prod","POST",true,"greetings");
 
-    public String title;
+
     public String url;
     public String method;
-    ApiEnum( String testTitle, String testUrl, String testMethod) {
-        title=testTitle;
-        url=testUrl;
-        method=testMethod;
+    boolean isActive;
+    String expected;
+
+    ApiEnum(String testUrl, String testMethod,boolean isActive,String expected){
+        this.url=testUrl;
+        this.method=testMethod;
+        this.isActive = isActive;
+        this.expected= expected;
     }
 
 

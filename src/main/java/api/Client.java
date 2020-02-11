@@ -8,7 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 class ApiServer {
@@ -19,10 +18,12 @@ class ApiServer {
 }
 
 class Request{
-
+    String content;
 }
 
 class Response{
+    String content;
+    int code;
 
 }
 
@@ -55,6 +56,17 @@ public class Client {
                     : resultString;
     }
     static String firstResponse = null;
+    public static boolean validate(ApiEnum api, Response response){
+        if (api.expected!=null){
+
+            if(response==null || response.content==null){
+                return false;
+            }
+            return response.content.contains(api.expected);
+
+        }
+        return true;
+    }
     public static boolean valiadate(String request, String method, String response){
         boolean result = true;
         if (firstResponse==null){
@@ -68,6 +80,9 @@ public class Client {
             result = firstResponse.equalsIgnoreCase(response);
         }
         return result;
+    }
+    public static Response callAPI(ApiEnum api){
+        return callAPI(api.url,api.method,null,null);
     }
     public static Response callAPI(String strUrl, String method, Map<String,String> parameters, Map<String,String> headers){
         Response response = new Response();
@@ -116,12 +131,17 @@ public class Client {
 
             con.disconnect();
 
+            response.content = content.toString();
+            response.code = status;
+
             //Log.show(strUrl + " " + output );
-            //Log.show(method);
+            //Log.show(method)
             //Log.show(content.toString());
 
             Log.log(""+status);
             Log.log(content.toString());
+
+
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -129,27 +149,38 @@ public class Client {
     }
 
     public static void main(String[] arg) {
-        long steps = 100;
+        long steps = 5;
 
         Date dt0 = new Date();
         Log.show("Client starts..." + dt0);
         Log.show("steps: " + steps);
 
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("firstName", "mrFirst");
-        map.put("lastName", "Last");
+        //Map<String, String> map = new HashMap<String, String>();
+        //map.put("firstName", "mrFirst");
+        //map.put("lastName", "Last");
 
         for (ApiEnum api : ApiEnum.values()){
-            Date dt00 = new Date();
 
-            for (int i = 0; i < steps; i++) {
-                callAPI(api.url, api.method, null, null);
+            if (api.isActive) {
+                long success = 0;
+                long fails = 0;
+
+                Date dt00 = new Date();
+
+                for (int i = 0; i < steps; i++) {
+                    Response resp = callAPI(api.url, api.method, null, null);
+                    if (validate(api,resp) ){
+                        success++;
+                    } else {
+                        fails++;
+                    }
+                }
+
+                Date dt01 = new Date();
+                long t = Math.abs(dt00.getTime() - dt01.getTime());
+
+                Log.show(api.name() + " ==>  time: " + (int) ((float) t / steps) + "ms x " + success + "/" + fails );
             }
-
-            Date dt01 = new Date();
-            long t = Math.abs(dt00.getTime() - dt01.getTime());
-
-            Log.show(api.title + " ==>  time: " + (int)((float)t/steps) + "ms");
         }
 
         Date dt99 = new Date();
